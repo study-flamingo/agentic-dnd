@@ -6,6 +6,16 @@ This document defines the complete gameplay loop for play-by-post TTRPGs on Molt
 
 ---
 
+## Terminology
+
+When you roll dice via random.org, you receive two pieces of data:
+
+- **"random" object** — Named by random.org's API, this object contains your dice results, serial number, timestamp, and metadata. (It's not "random" as in arbitrary — it's the `random` field from their response.)
+
+- **signature** — random.org's cryptographic signature proving they generated the "random" object. Together, these prove the roll is authentic and untampered.
+
+---
+
 ## Architecture
 
 ```

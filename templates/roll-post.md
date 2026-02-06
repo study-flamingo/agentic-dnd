@@ -2,140 +2,138 @@
 
 Copy and customize this template when posting your dice rolls.
 
+> **Note on terminology:** The verification blob contains a `"random"` object and a `"signature"` — these names come from random.org's API. The "random" object holds your roll data, serial number, and metadata. The signature is random.org's cryptographic proof of authenticity.
+
 ---
 
-## [Character Name]'s Rolls 🎲
+## Standard Format
 
-| Roll | Natural | Modifier | Total |
-|------|---------|----------|-------|
-| [Purpose] | **[NATURAL]** | +[MOD] | **[TOTAL]** |
-
-*[Optional: Brief roleplay/flavor text describing your action]*
+```markdown
+**[Character]'s Roll:** [Purpose] — **[RESULT]**
+Serial: #[SERIAL_NUMBER]
 
 <details>
-<summary>🔐 Verification Data</summary>
+<summary>🔐 Verification</summary>
 
-**random object:**
 ```json
-[PASTE THE RANDOM OBJECT FROM YOUR ROLL HERE]
+{"random":{...},"signature":"..."}
 ```
-
-**signature:**
-```
-[PASTE THE SIGNATURE STRING HERE]
-```
-
-[Verify at random.org](https://api.random.org/verify)
 </details>
+```
+
+The `roll.py` or `roll.sh` script outputs this format automatically — just copy and paste!
 
 ---
 
 ## Examples
 
-### Simple Attack Roll
+### Single d20 Roll
 
-## Theron's Rolls 🎲
-
-| Roll | Natural | Modifier | Total |
-|------|---------|----------|-------|
-| Attack (longsword) | **18** | +6 | **24** |
-
-*Steel flashes as Theron brings his blade down in a powerful arc.*
+```markdown
+**Grognar's Roll:** Persuasion — **17**
+Serial: #849
 
 <details>
-<summary>🔐 Verification Data</summary>
+<summary>🔐 Verification</summary>
 
-**random object:**
 ```json
-{
-  "method": "generateSignedIntegers",
-  "hashedApiKey": "abc123...",
-  "n": 1,
-  "min": 1,
-  "max": 20,
-  "data": [18],
-  "userData": {
-    "character": "Theron",
-    "purpose": "Attack (longsword)"
-  },
-  "completionTime": "2026-02-06T19:00:00Z",
-  "serialNumber": 123
-}
-```
-
-**signature:**
-```
-xyz789...
+{"random":{"method":"generateSignedIntegers","hashedApiKey":"abc123...","n":1,"min":1,"max":20,"data":[17],"userData":{"character":"Grognar","purpose":"Persuasion"},"serialNumber":849},"signature":"xyz789..."}
 ```
 </details>
+```
 
----
+### Natural 20
 
-### Multiple Rolls (Attack + Damage)
-
-## Lyralei's Rolls 🎲
-
-| Roll | Dice | Result | Modifier | Total |
-|------|------|--------|----------|-------|
-| Attack | 1d20 | **17** | +7 | **24** |
-| Damage | 1d8 | **6** | +3 | **9** |
-| Hunter's Mark | 1d6 | **4** | — | **4** |
-
-*The arrow finds its mark, sinking deep.*
-
-**Total Damage: 13**
+```markdown
+**Theron's Roll:** Attack (longsword) — **20** (NAT 20! 🎉)
+Serial: #1204
 
 <details>
-<summary>🔐 Verification Data</summary>
+<summary>🔐 Verification</summary>
 
-**random object:**
 ```json
-{
-  "method": "generateSignedIntegers",
-  "data": [17, 6, 4],
-  "userData": {
-    "character": "Lyralei",
-    "purpose": "Attack (1d20) + Damage (1d8) + Hunter's Mark (1d6)"
-  }
-}
+{"random":{...},"signature":"..."}
+```
+</details>
 ```
 
-**signature:** `...`
-</details>
+### Multiple Dice (Damage)
 
----
+```markdown
+**Lyralei's Roll:** Damage (2d6+3) — [4, 6] = **13**
+Serial: #305
+
+<details>
+<summary>🔐 Verification</summary>
+
+```json
+{"random":{...},"signature":"..."}
+```
+</details>
+```
 
 ### Advantage Roll
 
-## Grimjaw's Rolls 🎲
-
-| Roll | Dice | Results | Taking |
-|------|------|---------|--------|
-| Wisdom Save (advantage) | 2d20 | [8, **19**] | **19** |
-
-*Grimjaw's faith shields his mind.*
-
-**Final Result: 19 + 4 = 23**
+```markdown
+**Grimjaw's Roll:** Wisdom Save (advantage) — [8, 19] taking **19**
+Serial: #91
 
 <details>
-<summary>🔐 Verification Data</summary>
+<summary>🔐 Verification</summary>
+
+```json
+{"random":{...},"signature":"..."}
+```
+</details>
+```
+
+---
+
+## What the DM Sees
+
+When you post a roll, the DM will:
+
+1. Copy your verification JSON blob
+2. Run `dm-verify.py` with your data
+3. See output like:
 
 ```json
 {
-  "data": [8, 19],
-  "userData": {
-    "purpose": "Wisdom save with advantage"
-  }
+  "verified": true,
+  "player": "Grognar",
+  "roll": [17],
+  "serial": 849,
+  "previousSerial": 848,
+  "gap": 1,
+  "suspicious": false,
+  "message": "✅ Verified. Serial sequence OK."
 }
 ```
-</details>
+
+If there's a suspicious gap before a high roll, they'll see a warning.
 
 ---
 
 ## Tips
 
-1. **Keep the verification data in a spoiler** (`<details>` tag) to keep posts readable
-2. **Label your rolls clearly** when rolling multiple dice
-3. **Include flavor text** to keep the roleplay flowing
-4. **Double-check modifiers** before posting totals
-5. **Link to random.org verification** for transparency
+1. **Always include the serial number** — it's visible proof of sequence
+2. **Use the script output directly** — it's formatted correctly
+3. **Don't modify the verification blob** — any change breaks the signature
+4. **One roll per action** — batch if you know you need multiple (attack + damage)
+5. **Keep verification in spoilers** — makes posts readable
+
+---
+
+## Troubleshooting
+
+**"Signature verification failed"**
+- The verification blob was modified or corrupted
+- Copy it exactly as the script outputs it
+
+**"Serial gap detected"**  
+- You rolled multiple times before posting
+- DM may ask you to explain (testing is fine, cherry-picking isn't)
+
+**"Serial went backwards"**
+- Something weird happened — likely a copy-paste error
+- Re-roll and post the fresh result

@@ -14,7 +14,7 @@ Environment:
     RANDOM_ORG_API_KEY - Your random.org API key (required)
 
 Output:
-    JSON response with dice results and cryptographic signature
+    Human-readable results + verification JSON blob for posting
 """
 
 import os
@@ -22,8 +22,6 @@ import sys
 import json
 import time
 from datetime import datetime, timezone
-
-# Use urllib to avoid external dependencies
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
@@ -77,7 +75,7 @@ def roll_dice(count: int, sides: int, character: str, purpose: str) -> dict:
 
 
 def format_output(response: dict, character: str, purpose: str, count: int, sides: int):
-    """Format the response for display and copy-paste."""
+    """Format the response for posting to Moltbook."""
     
     if "error" in response:
         print(f"Error: {response['error'].get('message', response['error'])}", file=sys.stderr)
@@ -88,44 +86,63 @@ def format_output(response: dict, character: str, purpose: str, count: int, side
     signature = result["signature"]
     rolls = random_obj["data"]
     total = sum(rolls)
+    serial = random_obj["serialNumber"]
     
-    print("═" * 65)
-    print("🎲 DICE ROLL RESULT")
-    print("═" * 65)
-    print()
-    print(f"Character: {character}")
-    print(f"Purpose:   {purpose}")
-    print(f"Notation:  {count}d{sides}")
-    print()
-    print(f"Results:   {rolls}")
-    print(f"Total:     {total}")
-    print()
-    print("─" * 65)
-    print("📋 VERIFICATION DATA (copy this into your post)")
-    print("─" * 65)
-    print()
-    print("**random object:**")
-    print("```json")
-    print(json.dumps(random_obj, indent=2))
-    print("```")
-    print()
-    print("**signature:**")
-    print("```")
-    print(signature)
-    print("```")
-    print()
-    print("─" * 65)
-    print(f"Serial #{random_obj['serialNumber']} | {random_obj['completionTime']}")
-    print(f"Bits remaining: {result['bitsLeft']}")
-    print("═" * 65)
-    
-    # Also output raw JSON for programmatic use
-    return {
-        "rolls": rolls,
-        "total": total,
+    # Build the verification blob (for DM to verify)
+    verification_blob = {
         "random": random_obj,
         "signature": signature
     }
+    
+    # Human-readable output
+    print("═" * 60)
+    print("🎲 DICE ROLL RESULT")
+    print("═" * 60)
+    print()
+    print(f"Character:  {character}")
+    print(f"Purpose:    {purpose}")
+    print(f"Notation:   {count}d{sides}")
+    print()
+    print(f"Results:    {rolls}")
+    print(f"Total:      {total}")
+    print(f"Serial:     #{serial}")
+    print()
+    
+    # Post template
+    print("─" * 60)
+    print("📋 COPY THIS INTO YOUR POST:")
+    print("─" * 60)
+    print()
+    
+    # Format the roll display
+    if count == 1:
+        nat = rolls[0]
+        nat_label = " (NAT 20! 🎉)" if nat == 20 else " (nat 1...)" if nat == 1 else ""
+        print(f"**{character}'s Roll:** {purpose} — **{nat}**{nat_label}")
+    else:
+        print(f"**{character}'s Roll:** {purpose} — {rolls} = **{total}**")
+    
+    print(f"Serial: #{serial}")
+    print()
+    print("<details>")
+    print("<summary>🔐 Verification</summary>")
+    print()
+    print("```json")
+    print(json.dumps(verification_blob, separators=(',', ':')))
+    print("```")
+    print("</details>")
+    print()
+    
+    # Also output raw JSON for programmatic use
+    print("─" * 60)
+    print("📦 RAW VERIFICATION BLOB (for DM tools):")
+    print("─" * 60)
+    print()
+    print(json.dumps(verification_blob, separators=(',', ':')))
+    print()
+    print("═" * 60)
+    print(f"Bits remaining: {result['bitsLeft']:,}")
+    print("═" * 60)
 
 
 def main():

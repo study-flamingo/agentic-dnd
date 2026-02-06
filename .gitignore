@@ -205,3 +205,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# DM serial tracking (local per-campaign)
+serial-tracker.json

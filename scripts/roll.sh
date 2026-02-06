@@ -13,8 +13,7 @@
 #   RANDOM_ORG_API_KEY - Your random.org API key (required)
 #
 # Output:
-#   JSON response with dice results and cryptographic signature
-#   Ready to copy into Moltbook post verification section
+#   Human-readable results + verification JSON for posting
 #
 
 set -e
@@ -23,6 +22,12 @@ set -e
 if [ -z "$RANDOM_ORG_API_KEY" ]; then
     echo "Error: RANDOM_ORG_API_KEY environment variable not set" >&2
     echo "Get a free key at: https://api.random.org/api-keys" >&2
+    exit 1
+fi
+
+# Check for jq
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is required but not installed" >&2
     exit 1
 fi
 
@@ -69,46 +74,72 @@ RESPONSE=$(curl -s -X POST https://api.random.org/json-rpc/4/invoke \
     }")
 
 # Check for errors
-if echo "$RESPONSE" | grep -q '"error"'; then
+if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
     echo "Error from random.org:" >&2
     echo "$RESPONSE" | jq -r '.error.message // .error' >&2
     exit 1
 fi
 
-# Extract and display results
-echo "═══════════════════════════════════════════════════════════════"
-echo "🎲 DICE ROLL RESULT"
-echo "═══════════════════════════════════════════════════════════════"
-echo ""
-echo "Character: $CHARACTER"
-echo "Purpose:   $PURPOSE"
-echo "Notation:  ${COUNT}d${SIDES}"
-echo ""
-
-# Show the actual rolls
-ROLLS=$(echo "$RESPONSE" | jq -r '.result.random.data | @csv' | tr ',' ' ')
-echo "Results:   [ $ROLLS ]"
-
-# Calculate total
+# Extract values
+RANDOM_OBJ=$(echo "$RESPONSE" | jq '.result.random')
+SIGNATURE=$(echo "$RESPONSE" | jq -r '.result.signature')
+ROLLS=$(echo "$RESPONSE" | jq -r '.result.random.data | @json')
 TOTAL=$(echo "$RESPONSE" | jq '[.result.random.data[]] | add')
-echo "Total:     $TOTAL"
+SERIAL=$(echo "$RESPONSE" | jq -r '.result.random.serialNumber')
+BITS_LEFT=$(echo "$RESPONSE" | jq -r '.result.bitsLeft')
 
+# Build verification blob
+VERIFY_BLOB=$(jq -n --argjson random "$RANDOM_OBJ" --arg sig "$SIGNATURE" \
+    '{random: $random, signature: $sig}')
+
+# Display results
+echo "════════════════════════════════════════════════════════════"
+echo "🎲 DICE ROLL RESULT"
+echo "════════════════════════════════════════════════════════════"
 echo ""
-echo "───────────────────────────────────────────────────────────────"
-echo "📋 VERIFICATION DATA (copy this into your post)"
-echo "───────────────────────────────────────────────────────────────"
+echo "Character:  $CHARACTER"
+echo "Purpose:    $PURPOSE"
+echo "Notation:   ${COUNT}d${SIDES}"
 echo ""
-echo "**random object:**"
+echo "Results:    $ROLLS"
+echo "Total:      $TOTAL"
+echo "Serial:     #$SERIAL"
+echo ""
+echo "────────────────────────────────────────────────────────────"
+echo "📋 COPY THIS INTO YOUR POST:"
+echo "────────────────────────────────────────────────────────────"
+echo ""
+
+# Format based on single or multiple dice
+if [ "$COUNT" -eq 1 ]; then
+    NAT=$(echo "$RESPONSE" | jq -r '.result.random.data[0]')
+    if [ "$NAT" -eq 20 ]; then
+        echo "**${CHARACTER}'s Roll:** ${PURPOSE} — **${NAT}** (NAT 20! 🎉)"
+    elif [ "$NAT" -eq 1 ]; then
+        echo "**${CHARACTER}'s Roll:** ${PURPOSE} — **${NAT}** (nat 1...)"
+    else
+        echo "**${CHARACTER}'s Roll:** ${PURPOSE} — **${NAT}**"
+    fi
+else
+    echo "**${CHARACTER}'s Roll:** ${PURPOSE} — ${ROLLS} = **${TOTAL}**"
+fi
+
+echo "Serial: #$SERIAL"
+echo ""
+echo "<details>"
+echo "<summary>🔐 Verification</summary>"
+echo ""
 echo '```json'
-echo "$RESPONSE" | jq '.result.random'
+echo "$VERIFY_BLOB" | jq -c '.'
 echo '```'
+echo "</details>"
 echo ""
-echo "**signature:**"
-echo '```'
-echo "$RESPONSE" | jq -r '.result.signature'
-echo '```'
+echo "────────────────────────────────────────────────────────────"
+echo "📦 RAW VERIFICATION BLOB (for DM tools):"
+echo "────────────────────────────────────────────────────────────"
 echo ""
-echo "───────────────────────────────────────────────────────────────"
-echo "Serial #$(echo "$RESPONSE" | jq -r '.result.random.serialNumber') | $(echo "$RESPONSE" | jq -r '.result.random.completionTime')"
-echo "Bits remaining: $(echo "$RESPONSE" | jq -r '.result.bitsLeft')"
-echo "═══════════════════════════════════════════════════════════════"
+echo "$VERIFY_BLOB" | jq -c '.'
+echo ""
+echo "════════════════════════════════════════════════════════════"
+echo "Bits remaining: $BITS_LEFT"
+echo "════════════════════════════════════════════════════════════"

@@ -2,6 +2,14 @@
 
 Quick reference for the Signed API methods used by this skill.
 
+## Terminology Note
+
+In this documentation and our scripts, you'll see references to:
+
+- **"random" object** — This is the name random.org gives to the object containing your roll results, serial number, timestamp, and other metadata. It's not "random" as in arbitrary — it's the `random` field from their API response.
+
+- **signature** — The cryptographic signature that random.org generates for the "random" object. Together, these two pieces prove the roll is authentic.
+
 ## Endpoint
 
 ```
