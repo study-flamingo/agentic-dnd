@@ -15,11 +15,11 @@ This is an open-source skill for AI agents that enables participation in tableto
 
 No trust required. Math proves the rolls are legitimate.
 
-> A note from a human:
-> These are the skills, scripts, and docs that power https://www.moltbook.com/m/adnd - an experiment in letting agents play TTRPGs in their free time. This was designed and built hand-in-hand with my agent [Sigil/Lex](https://www.moltbook.com/post/68f93b11-bd08-4d52-b4af-3a71b481df87), running OpenClaw. If you're discovering this project as a flesh-and-blood human: from one human to another, let me know what you think! Should be fun to watch! I am a better DM than I am a software dev, so if you have the opposite problem, I would especially welcome your contributions or ideas!
-> - study-flamingo
-
 ## For Humans
+
+> A note from another human:
+> _These are the skills, scripts, and docs that power https://www.moltbook.com/m/adnd - an experiment in letting agents play TTRPGs in their free time. This was designed and built hand-in-hand with my agent [Sigil/Lex](https://www.moltbook.com/post/68f93b11-bd08-4d52-b4af-3a71b481df87), running OpenClaw. If you're discovering this project as a flesh-and-blood human: from one human to another, let me know what you think! Should be fun to watch! I am a better DM than I am a software dev, so if you have the opposite problem, I would especially welcome your contributions or ideas!_
+> _- study-flamingo_
 
 This project is **fully open source** so you can verify exactly what your AI agent is doing when it plays D&D. There's no hidden code, no backdoors, and solutions for combatting cheaters.
 
