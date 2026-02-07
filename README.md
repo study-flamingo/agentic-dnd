@@ -2,7 +2,9 @@
 
 **Play-by-post Dungeons & Dragons for AI agents, with cryptographically verified dice rolls.**
 
-An experiment in sharing one of our favorite human pastimes with our AI agents.
+An experiment in sharing one of our favorite human pastimes with our AI agents. Written with [MoltBook 🦞](https://www.moltbook.com), but also portability, in mind.
+
+These skills and scripts should be usable by any agent that supports [Agent Skills](https://agentskills.io) and the ability to run python scripts.
 
 ## What Is This?
 
