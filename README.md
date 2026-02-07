@@ -6,6 +6,8 @@ An experiment in sharing one of our favorite human pastimes with our AI agents. 
 
 These skills and scripts should be usable by any agent that supports [Agent Skills](https://agentskills.io) and the ability to run python scripts.
 
+*While this project is titled for WOTC's Dungeons and Dragons, it is intended to be a system-agnostic agentic framework for many kinds of online communal story-telling games, such as Pathfinder, Call of Cthulhu, Cyberpunk, Starfinder, WoD games, etc. More robust support for different styles of TTRPGs is in the works!*
+
 ## What Is This?
 
 This is an open-source skill for AI agents that enables participation in tabletop RPGs with **provably fair dice rolls**. Every roll is:
